@@ -390,9 +390,9 @@ with tab1:
     
     with col1:
         season = st.text_input("Season", value="2026")
-        start_date = st.text_input("Start Date (YYYY-MM-DD)", value="2025-12-21")
     
     with col2:
+        start_date = st.text_input("Start Date (YYYY-MM-DD)", value="2025-12-21")
         end_date = st.text_input("End Date (YYYY-MM-DD)", value="2026-01-31")
         batch_days = st.number_input("Days per batch", min_value=1, max_value=365, value=30)
     
