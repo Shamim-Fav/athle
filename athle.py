@@ -9,7 +9,7 @@ from typing import Optional, List
 
 # Set page config
 st.set_page_config(
-    page_title="🏃 Athle.fr Competition Scraper",
+    page_title="🏃 Athlefrance Competition Scraper",
     layout="centered",  # Changed from "wide" to "centered"
     page_icon="🏃"
 )
@@ -87,7 +87,7 @@ def parse_competitions(html: str, page: int) -> List[dict]:
                     if detail_link and detail_link.get('href'):
                         detail_url = detail_link.get('href')
                         if detail_url.startswith('/'):
-                            detail_url = f"https://www.athle.fr{detail_url}"
+                            detail_url = f"https://www..fr{detail_url}"
                 
                 competition = {
                     'Competition_ID': competition_id,
@@ -378,7 +378,7 @@ def convert_to_excel(df: pd.DataFrame) -> bytes:
     return output.getvalue()
 
 # ================== STREAMLIT UI ==================
-st.title("🏃 Athle.fr Competition Scraper")
+st.title("🏃 Athlefrance Competition Scraper")
 st.markdown("Scrape athletic competitions from athle.fr with detailed information extraction.")
 
 # Create tabs for better organization
