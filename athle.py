@@ -10,7 +10,6 @@ from typing import Optional, List
 # Set page config
 st.set_page_config(
     page_title="🏃 Athle.fr Competition Scraper",
-    layout="wide",
     page_icon="🏃"
 )
 
