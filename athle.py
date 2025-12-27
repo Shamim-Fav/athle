@@ -66,52 +66,71 @@ def parse_competitions(html: str, page: int) -> List[dict]:
     """Parse competitions from HTML."""
     soup = BeautifulSoup(html, 'html.parser')
     competitions = []
-    tables = soup.find_all('table')
     
-    for table in tables:
-        rows = table.find_all('tr')
+    # Find all competition rows
+    rows = soup.find_all('tr', {'class': 'clignotant'})
+    
+    for row in rows:
+        # Get all cells in the row
+        cells = row.find_all('td')
+        if len(cells) < 7:
+            continue
         
-        for row in rows:
-            date_link = row.find('a', title=re.compile(r'Compétition numéro'))
-            if date_link:
-                cells = row.find_all('td')
-                
-                # Extract competition ID
-                id_match = re.search(r'numéro : (\d+)', date_link.get('title', ''))
-                competition_id = id_match.group(1) if id_match else ''
-                
-                # Extract detail URL
-                detail_url = ""
-                if len(cells) >= 7:
-                    detail_link = cells[6].find('a')
-                    if detail_link and detail_link.get('href'):
-                        detail_url = detail_link.get('href')
-                        if detail_url.startswith('/'):
-                            # CORRECTED: Fixed URL construction
-                            detail_url = f"https://www.athle.fr{detail_url}"
-                
-                competition = {
-                    'Competition_ID': competition_id,
-                    'Date': date_link.get_text(strip=True),
-                    'Event': cells[1].get_text(strip=True) if len(cells) > 1 else '',
-                    'Location': cells[2].get_text(strip=True) if len(cells) > 2 else '',
-                    'Type': cells[3].get_text(strip=True) if len(cells) > 3 else '',
-                    'Level': cells[4].get_text(strip=True) if len(cells) > 4 else '',
-                    'Detail_URL': detail_url,
-                    'Page': page,
-                    # Initialize detail page fields
-                    'Organizer_Name': '',
-                    'Organizer_Address': '',
-                    'Organizer_Phone': '',
-                    'Organizer_Email': '',
-                    'Organizer_Website': '',
-                    'Stadium_Address': '',
-                    'Competition_Code': '',
-                    'Contact_Person': '',
-                    'Events_List': '',
-                    'Events_Count': 0
-                }
-                competitions.append(competition)
+        # Extract competition ID from the date link
+        date_cell = cells[0]
+        date_link = date_cell.find('a', title=True)
+        
+        competition_id = ""
+        if date_link and date_link.get('title'):
+            id_match = re.search(r'numéro : (\d+)', date_link.get('title'))
+            competition_id = id_match.group(1) if id_match else ""
+        
+        # Extract date
+        date = date_cell.get_text(strip=True) if date_cell else ""
+        
+        # Extract event name
+        event = cells[1].get_text(strip=True) if len(cells) > 1 else ""
+        
+        # Extract location
+        location = cells[2].get_text(strip=True) if len(cells) > 2 else ""
+        
+        # Extract type
+        competition_type = cells[3].get_text(strip=True) if len(cells) > 3 else ""
+        
+        # Extract level
+        level = cells[4].get_text(strip=True) if len(cells) > 4 else ""
+        
+        # Extract detail URL - look in the last cell
+        detail_url = ""
+        if len(cells) >= 7:
+            detail_link = cells[6].find('a')
+            if detail_link and detail_link.get('href'):
+                detail_url = detail_link.get('href')
+                if detail_url.startswith('/'):
+                    detail_url = f"https://www.athle.fr{detail_url}"
+        
+        competition = {
+            'Competition_ID': competition_id,
+            'Date': date,
+            'Event': event,
+            'Location': location,
+            'Type': competition_type,
+            'Level': level,
+            'Detail_URL': detail_url,
+            'Page': page,
+            # Initialize detail page fields
+            'Organizer_Name': '',
+            'Organizer_Address': '',
+            'Organizer_Phone': '',
+            'Organizer_Email': '',
+            'Organizer_Website': '',
+            'Stadium_Address': '',
+            'Competition_Code': '',
+            'Contact_Person': '',
+            'Events_List': '',
+            'Events_Count': 0
+        }
+        competitions.append(competition)
     
     return competitions
 
@@ -301,23 +320,24 @@ def scrape_detail_pages(_session, competitions: List[dict], progress_bar=None, s
     
     updated_competitions = []
     for idx, comp in enumerate(competitions):
-        if comp.get('Detail_URL'):
-            if status_text:
-                status_text.text(f"Scraping detail {idx + 1}/{len(competitions)}: {comp['Event'][:30]}...")
-            
-            detail_data = scrape_detail_page(_session, comp['Detail_URL'])
-            if detail_data:
-                comp.update(detail_data)
-            
+        if not comp.get('Detail_URL'):
             updated_competitions.append(comp)
+            continue
             
-            if progress_bar:
-                progress_val = (idx + 1) / len(competitions)
-                progress_bar.progress(progress_val)
-            
-            time.sleep(DEFAULT_DELAY)
-        else:
-            updated_competitions.append(comp)
+        if status_text:
+            status_text.text(f"Scraping detail {idx + 1}/{len(competitions)}: {comp['Event'][:30]}...")
+        
+        detail_data = scrape_detail_page(_session, comp['Detail_URL'])
+        if detail_data:
+            comp.update(detail_data)
+        
+        updated_competitions.append(comp)
+        
+        if progress_bar:
+            progress_val = (idx + 1) / len(competitions)
+            progress_bar.progress(progress_val)
+        
+        time.sleep(DEFAULT_DELAY)
     
     return updated_competitions
 
@@ -396,7 +416,6 @@ with tab1:
     with col2:
         start_date = st.text_input("Start Date (YYYY-MM-DD)", value="2025-12-21")
         end_date = st.text_input("End Date (YYYY-MM-DD)", value="2026-01-31")
-
     
     with col3:
         batch_mode = st.checkbox("Batch Mode", value=False)
@@ -444,6 +463,11 @@ with tab1:
                     st.stop()
                 
                 st.success(f"Found {len(competitions)} competitions!")
+                
+                # Display some debug info
+                st.info(f"Sample Detail URLs (first 5):")
+                for i, comp in enumerate(competitions[:5]):
+                    st.write(f"{i+1}. {comp.get('Detail_URL', 'No URL')}")
                 
                 # Scrape detail pages if requested
                 if scrape_details and competitions:
