@@ -10,7 +10,7 @@ from typing import Optional, List
 # Set page config
 st.set_page_config(
     page_title="🏃 Athlefrance Competition Scraper",
-    layout="centered",  # Changed from "wide" to "centered"
+    layout="centered",
     page_icon="🏃"
 )
 
@@ -39,7 +39,7 @@ HEADERS = {
 }
 
 # ================== SESSION MANAGEMENT ==================
-@st.cache_resource(ttl=1800)  # Cache session for 30 minutes
+@st.cache_resource(ttl=1800)
 def get_session():
     """Create and cache a requests session."""
     session = requests.Session()
@@ -87,7 +87,8 @@ def parse_competitions(html: str, page: int) -> List[dict]:
                     if detail_link and detail_link.get('href'):
                         detail_url = detail_link.get('href')
                         if detail_url.startswith('/'):
-                            detail_url = f"https://www..fr{detail_url}"
+                            # CORRECTED: Fixed URL construction
+                            detail_url = f"https://www.athle.fr{detail_url}"
                 
                 competition = {
                     'Competition_ID': competition_id,
