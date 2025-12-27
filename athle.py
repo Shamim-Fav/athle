@@ -9,7 +9,7 @@ from typing import Optional, List
 
 # Set page config
 st.set_page_config(
-    page_title="🏃 Athlefrance Competition Scraper",
+    page_title="Athlefrance Competition Scraper",
     layout="centered",
     page_icon="🏃"
 )
