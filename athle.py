@@ -432,7 +432,7 @@ def convert_to_excel(df: pd.DataFrame) -> bytes:
 
 # ================== STREAMLIT UI ==================
 st.title("🏃 Athlefrance Competition Scraper")
-st.markdown("Scrape athletic competitions from athle.fr with detailed information extraction.")
+st.markdown("Scrape athletic competitions")
 
 # Create tabs for better organization
 tab1, tab2 = st.tabs(["🏁 Scrape Competitions", "ℹ️ About"])
